@@ -3,6 +3,8 @@ MarkdownLectures
 
 Convert a single markdown file into lectures, slides, and outlines.
 
+An explanation of the project is [here](http://benschmidt.org/2014/11/07/building-outlines-for-markdown-documents-with-pandoc/).
+
 Some potentially useful lines from my Makefile are below.
 
 ```
