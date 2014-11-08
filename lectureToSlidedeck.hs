@@ -1,6 +1,6 @@
 import Text.Pandoc
 import Text.Pandoc.Walk (walk,query)
-import Text.Pandoc.Builder
+import Text.Pandoc.Shared (stringify)
 
 --
 
@@ -17,8 +17,14 @@ extractSlides (CodeBlock attr string) =
 extractSlides x = []
 
 pullBlocks :: Pandoc -> [Block]
-pullBlocks (Pandoc meta blocks) = (walk fiximages blocks) ++ [HorizontalRule]
+pullBlocks (Pandoc meta blocks) = (walk fiximages (walk fancyLink blocks)) ++ [HorizontalRule]
 
+
+fancyLink :: Inline -> Inline
+fancyLink (Link textbits (url,title)) = do
+  let newlink = "<a href=\"" ++ url ++ "\" data-preview-link>" ++ (stringify textbits) ++ "</a>"
+  RawInline (Format "html") newlink
+fancyLink x = x
 
 makeIframe :: String -> Inline
 makeIframe target = do
@@ -26,12 +32,14 @@ makeIframe target = do
   RawInline (Format "html") iframe
 
 fiximages :: Block -> Block
+-- null list handling.
 fiximages (Para [Image [] target]) = (Para [Image [] target])
-
 -- an initial ">" before the link target denotes presenting it as an iframe, not an image.
 fiximages (Para [Image text ('>':target,_)]) = Div nullAttr [Para text, Plain [(makeIframe target)]]
-
+-- In general, image titles are dropped above the images
 fiximages (Para [Image text target]) = Div nullAttr [Para text, Para [Image [] target]]
+
+-- Anything else is just itself.
 fiximages x = x
 
 
