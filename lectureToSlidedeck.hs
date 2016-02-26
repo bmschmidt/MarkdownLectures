@@ -1,3 +1,4 @@
+import Text.Pandoc.Error
 import Text.Pandoc
 import Text.Pandoc.Walk (walk,query)
 import Text.Pandoc.Shared (stringify)
@@ -22,11 +23,11 @@ extractSlides (CodeBlock attr string) =
 --All other text is skipped
 extractSlides x = []
 
-pullBlocks :: Pandoc -> [Block]
+pullBlocks :: Either Text.Pandoc.Error.PandocError Pandoc -> [Block]
 
 --Each slide is read as a Pandoc "document," and then images are corrected and it's fed back with a horizontal rule
 --to separate it from the other slides in the deck.
-pullBlocks (Pandoc meta blocks) = do
+pullBlocks  (Right (Pandoc meta blocks)) = do
   let newblocks = walk fiximages $ walk fancyLink $ walk addBookwormLinks blocks
   (newblocks ++ [HorizontalRule])
 
@@ -69,14 +70,14 @@ fiximages (Para [Image text target]) = Div nullAttr [Para text, Para [Link [Imag
 fiximages x = x
 
 
-slideReturn :: Pandoc -> Pandoc
+slideReturn :: Either Text.Pandoc.Error.PandocError Pandoc -> Pandoc
 -- extractSlides is a function, not a query, b/c it takes the format Block->[Block].
 --This could and should be changed by just wrapping it all in a div element.
-slideReturn (Pandoc meta blocks) = do
+slideReturn (Right (Pandoc meta blocks)) = do
   let newData = foldl (++) [] (map extractSlides blocks)
   Pandoc meta newData
 
-readDoc :: String -> Pandoc
+readDoc :: String -> Either Text.Pandoc.Error.PandocError Pandoc
 readDoc = readJSON def
 
 writeDoc :: Pandoc -> String
