@@ -35,7 +35,7 @@ addBookwormLinks :: Block -> Block
 addBookwormLinks (CodeBlock (codeblock,["bookworm"],keyvals) code) = do
   let block = (CodeBlock (codeblock,["bookworm"],keyvals) code)
   let target = "http://benschmidt.org/beta/#" ++ (urlEncode code)
-  let link = Para [Link [Str "View"] (target,"")]
+  let link = Para [Link nullAttr [Str "View"] (target,"")]
   Div nullAttr [block,link]
 addBookwormLinks (RawBlock _ _) = Null
 addBookwormLinks x = x
@@ -43,7 +43,7 @@ addBookwormLinks x = x
 fancyLink :: Inline -> Inline
 -- For the time being, reveal.js will launch links *inside* the window. This is nice, so I do it for all links.
 -- Note it has the unfortunate side-effect of stripping formatting from the link text.
-fancyLink (Link textbits (url,title)) = do
+fancyLink (Link nullAttr textbits (url,title)) = do
   let newlink = "<a href=\"" ++ url ++ "\" data-preview-link>" ++ (stringify textbits) ++ "</a>"
   RawInline (Format "html") newlink
   
@@ -59,12 +59,12 @@ makeIframe target = do
 fiximages :: Block -> Block
 -- Images and Iframes that occupy a whole paragraph on their own are reformatted.
 -- null list handling for images: just return the thing.
-fiximages (Para [Image [] target]) = (Para [Image [] target])
+fiximages (Para [Image nullAttr [] target]) = (Para [Image nullAttr [] target])
 -- an initial ">" before the link target denotes presenting it as an iframe, not an image.
-fiximages (Para [Image text ('>':target,_)]) = Div nullAttr [Para text, Plain [(makeIframe target)]]
+fiximages (Para [Image nullAttr text ('>':target,_)]) = Div nullAttr [Para text, Plain [(makeIframe target)]]
 
 -- In general, image titles are dropped above the images and the image when clicked expands to fulscreen.
-fiximages (Para [Image text target]) = Div nullAttr [Para text, Para [Link [Image [] target] target]]
+fiximages (Para [Image nullAttr text target]) = Div nullAttr [Para text, Para [Link nullAttr [Image nullAttr [] target] target]]
 
 -- Anything else is just itself.
 fiximages x = x
