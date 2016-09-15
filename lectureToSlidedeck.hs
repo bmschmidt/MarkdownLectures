@@ -33,7 +33,7 @@ pullBlocks (Pandoc meta blocks) = do
 addBookwormLinks :: Block -> Block
 addBookwormLinks (CodeBlock (codeblock,["bookworm"],keyvals) code) = do
   let block = (CodeBlock (codeblock,["bookworm"],keyvals) code)
-  let target = "http://benschmidt.org/beta/#" ++ (urlEncode code)
+  let target = "http://benschmidt.org/BookwormD3/#" ++ (urlEncode code)
   let link = Para [Link [Str "View"] (target,"")]
   Div nullAttr [block,link]
 addBookwormLinks (RawBlock _ _) = Null
@@ -43,11 +43,10 @@ fancyLink :: Inline -> Inline
 -- For the time being, reveal.js will launch links *inside* the window. This is nice, so I do it for all links.
 -- Note it has the unfortunate side-effect of stripping formatting from the link text.
 fancyLink (Link textbits (url,title)) = do
-  let newlink = "<a href=\"" ++ url ++ "\" data-preview-link>" ++ (stringify textbits) ++ "</a>"
+  let newlink = "<a href=\"" ++ url ++ "\" data-preview-link>" ++ (myHTML (Pandoc nullMeta [(Para textbits)])) ++ "</a>"
   RawInline (Format "html") newlink
   
 fancyLink x = x
-
 
 makeIframe :: String -> Inline
 -- Iframes are arbitrarily defined at 600px tall, because they seem to break when scaling by percent.
@@ -63,7 +62,11 @@ fiximages (Para [Image [] target]) = (Para [Image [] target])
 fiximages (Para [Image text ('>':target,_)]) = Div nullAttr [Para text, Plain [(makeIframe target)]]
 
 -- In general, image titles are dropped above the images and the image when clicked expands to fulscreen.
-fiximages (Para [Image text target]) = Div nullAttr [Para text, Para [Link [Image [] target] target]]
+fiximages (Para [Image text target]) = do
+  let myimage =[Image [] target]
+  let newlink = fancyLink $ Link myimage target
+  let title   = fancyLink $ Link text target
+  Div nullAttr [Para [title], Para [newlink]]
 
 -- Anything else is just itself.
 fiximages x = x
