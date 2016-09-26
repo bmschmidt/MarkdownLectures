@@ -1,3 +1,4 @@
+import Text.Pandoc.Error
 import Text.Pandoc
 import Text.Pandoc.Walk (walk,query)
 import Text.Pandoc.Builder
@@ -97,14 +98,14 @@ emptyOrderedList = OrderedList ( 1 , DefaultStyle , DefaultDelim ) []
 -- and then fold them all together into a new outline,
 -- and finally return a new Pandoc dcoument consisting of just that outline.
 
-outlineReturn :: Pandoc -> Pandoc
-outlineReturn (Pandoc meta blocks) = do
+outlineReturn :: Either Text.Pandoc.Error.PandocError Pandoc -> Pandoc
+outlineReturn (Right (Pandoc meta blocks)) = do
   let newData = foldl appendOutline emptyOrderedList (extractBolds blocks)
   Pandoc meta [newData]
 
 --Very broken-down functions to actually read and write.
 
-readDoc :: String -> Pandoc
+readDoc :: String -> Either Text.Pandoc.Error.PandocError Pandoc
 readDoc = readJSON def
 
 writeDoc :: Pandoc -> String

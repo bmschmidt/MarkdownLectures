@@ -1,3 +1,4 @@
+import Text.Pandoc.Error
 import Text.Pandoc
 import Text.Pandoc.Walk (walk,query)
 import Text.Pandoc.Shared (stringify)
@@ -22,11 +23,11 @@ extractSlides (CodeBlock attr string) =
 --All other text is skipped
 extractSlides x = []
 
-pullBlocks :: Pandoc -> [Block]
+pullBlocks :: Either Text.Pandoc.Error.PandocError Pandoc -> [Block]
 
 --Each slide is read as a Pandoc "document," and then images are corrected and it's fed back with a horizontal rule
 --to separate it from the other slides in the deck.
-pullBlocks (Pandoc meta blocks) = do
+pullBlocks  (Right (Pandoc meta blocks)) = do
   let newblocks = walk fiximages $ walk fancyLink $ walk addBookwormLinks blocks
   (newblocks ++ [HorizontalRule])
 
@@ -34,7 +35,8 @@ addBookwormLinks :: Block -> Block
 addBookwormLinks (CodeBlock (codeblock,["bookworm"],keyvals) code) = do
   let block = (CodeBlock (codeblock,["bookworm"],keyvals) code)
   let target = "http://benschmidt.org/BookwormD3/#" ++ (urlEncode code)
-  let link = Para [Link [Str "View"] (target,"")]
+  let target = "http://benschmidt.org/beta/#" ++ (urlEncode code)
+  let link = Para [Link nullAttr [Str "View"] (target,"")]
   Div nullAttr [block,link]
 addBookwormLinks (RawBlock _ _) = Null
 addBookwormLinks x = x
@@ -42,7 +44,8 @@ addBookwormLinks x = x
 fancyLink :: Inline -> Inline
 -- For the time being, reveal.js will launch links *inside* the window. This is nice, so I do it for all links.
 -- Note it has the unfortunate side-effect of stripping formatting from the link text.
-fancyLink (Link textbits (url,title)) = do
+
+fancyLink (Link attr textbits (url,title)) = do
   let newlink = "<a href=\"" ++ url ++ "\" data-preview-link>" ++ (myHTML (Pandoc nullMeta [(Para textbits)])) ++ "</a>"
   RawInline (Format "html") newlink
   
@@ -57,29 +60,30 @@ makeIframe target = do
 fiximages :: Block -> Block
 -- Images and Iframes that occupy a whole paragraph on their own are reformatted.
 -- null list handling for images: just return the thing.
-fiximages (Para [Image [] target]) = (Para [Image [] target])
+fiximages (Para [Image nullAttr [] target]) = (Para [Image nullAttr [] target])
 -- an initial ">" before the link target denotes presenting it as an iframe, not an image.
-fiximages (Para [Image text ('>':target,_)]) = Div nullAttr [Para text, Plain [(makeIframe target)]]
+fiximages (Para [Image nullAttr text ('>':target,_)]) = Div nullAttr [Para text, Plain [(makeIframe target)]]
 
 -- In general, image titles are dropped above the images and the image when clicked expands to fulscreen.
-fiximages (Para [Image text target]) = do
-  let myimage =[Image [] target]
-  let newlink = fancyLink $ Link myimage target
-  let title   = fancyLink $ Link text target
+
+fiximages (Para [Image attr text target]) = do
+  let myimage =[Image nullAttr [] target]
+  let newlink = fancyLink $ Link nullAttr myimage target
+  let title   = fancyLink $ Link nullAttr text target
   Div nullAttr [Para [title], Para [newlink]]
 
 -- Anything else is just itself.
 fiximages x = x
 
 
-slideReturn :: Pandoc -> Pandoc
+slideReturn :: Either Text.Pandoc.Error.PandocError Pandoc -> Pandoc
 -- extractSlides is a function, not a query, b/c it takes the format Block->[Block].
 --This could and should be changed by just wrapping it all in a div element.
-slideReturn (Pandoc meta blocks) = do
+slideReturn (Right (Pandoc meta blocks)) = do
   let newData = foldl (++) [] (map extractSlides blocks)
   Pandoc meta newData
 
-readDoc :: String -> Pandoc
+readDoc :: String -> Either Text.Pandoc.Error.PandocError Pandoc
 readDoc = readJSON def
 
 writeDoc :: Pandoc -> String
