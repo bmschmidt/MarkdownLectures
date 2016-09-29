@@ -13,22 +13,26 @@ import Network.HTTP.Base (urlEncode)
 
 extractSlides :: Block -> [Block]
 --Level one headers get their own slide, followed by a horizontal rule.
+
 extractSlides (Header n m xs)
   | n==1 = [(Header n m xs),HorizontalRule]
   | otherwise = [Null]
 --Anything in a CodeBlock is treated as a slide: the previously-ignored markdown is parsed and 
 --assembled into a pandoc document.
+
 extractSlides (CodeBlock attr string) =
   pullBlocks (readMarkdown def string)
 --All other text is skipped
+
 extractSlides x = []
 
 pullBlocks :: Either Text.Pandoc.Error.PandocError Pandoc -> [Block]
 
---Each slide is read as a Pandoc "document," and then images are corrected and it's fed back with a horizontal rule
---to separate it from the other slides in the deck.
+--Each slide is read as a Pandoc "document," and then images are corrected
 pullBlocks  (Right (Pandoc meta blocks)) = do
   let newblocks = walk fiximages $ walk fancyLink $ walk addBookwormLinks blocks
+-- it's also fed back with a horizontal rule
+-- to separate it from the other slides in the deck.  
   (newblocks ++ [HorizontalRule])
 
 addBookwormLinks :: Block -> Block
@@ -60,12 +64,16 @@ makeIframe target = do
 fiximages :: Block -> Block
 -- Images and Iframes that occupy a whole paragraph on their own are reformatted.
 -- null list handling for images: just return the thing.
-fiximages (Para [Image nullAttr [] target]) = (Para [Image nullAttr [] target])
+fiximages (Para [Image attr [] target]) = (Para [Image attr [] target])
+
 -- an initial ">" before the link target denotes presenting it as an iframe, not an image.
-fiximages (Para [Image nullAttr text ('>':target,_)]) = Div nullAttr [Para text, Plain [(makeIframe target)]]
+-- More recently, pandoc seems to encodeurl '>' as '%3E'; keeping the old pattern just in case.
+fiximages (Para [Image attr text ('>':target,_)]) = Div attr [Para text, Plain [(makeIframe target)]]
+fiximages (Para [Image attr text ('%':'3':'E':target,_)]) = Div attr [Para text, Plain [(makeIframe target)]]
 
--- In general, image titles are dropped above the images and the image when clicked expands to fulscreen.
 
+
+-- In general, image titles are dropped above the images and the image when clicked expands to fullscreen.
 fiximages (Para [Image attr text target]) = do
   let myimage =[Image nullAttr [] target]
   let newlink = fancyLink $ Link nullAttr myimage target
@@ -78,7 +86,7 @@ fiximages x = x
 
 slideReturn :: Either Text.Pandoc.Error.PandocError Pandoc -> Pandoc
 -- extractSlides is a function, not a query, b/c it takes the format Block->[Block].
---This could and should be changed by just wrapping it all in a div element.
+-- This could and should be changed by just wrapping it all in a div element.
 slideReturn (Right (Pandoc meta blocks)) = do
   let newData = foldl (++) [] (map extractSlides blocks)
   Pandoc meta newData
