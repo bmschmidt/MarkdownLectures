@@ -1,7 +1,10 @@
-all: lectureToOutline lectureToSlidedeck clean
+DEST=/usr/local/bin
 
-%: %.hs
-	ghc $@
+all: $(DEST)/lectureToOutline $(DEST)/lectureToSlidedeck $(DEST)/shuffleAllLists $(DEST)/convertOldFormat clean
+
+$(DEST)/%: src/%.hs
+	ghc $<
+	mv src/$* $@
 
 clean:
-	rm *.hi *.o
+	rm -f src/*.hi src/*.o
