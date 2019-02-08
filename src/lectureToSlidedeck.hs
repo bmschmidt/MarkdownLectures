@@ -29,8 +29,12 @@ extractSlides (Div (id, classes, meta) contents)
   | "slide" `elem` classes = contents ++ [HorizontalRule]
   | otherwise = []
   where content = Div (id, classes, meta) contents
-                
 --All other text is skipped
+
+extractSlides (Para [Image attr text (target_1, target_2)]) = 
+  [fiximages (Para [Image attr text (target_1, target_2)])]
+
+
 extractSlides x = []
 
 
@@ -70,11 +74,10 @@ fiximages (Para [Image attr text ('>':target,_)]) =
 fiximages (Para [Image attr text ('%':'3':'E':target,_)]) =
   Div attr [Para text, Plain [(makeIframe target)]]
 
--- null list handling for images: just return the thing.
 fiximages (Para [Image attr [] (target_1, target_2)]) =
---  Header 2 ([],[],[("data-background-image",target_1),("data-background-size","contain")]) []
+  Header 2 ([],[],[("data-background-image",target_1),("data-background-size","contain")]) []
   -- Don't change until the fullscreen works again.
-  Para [Image attr [] (target_1, target_2)]
+--  Para [Image attr [] (target_1, target_2)]
   
 -- Putting a period as the text does the same thing--back compatibility.
 fiximages (Para [Image attr [(Str ".")] (target_1, target_2)]) = do
@@ -84,8 +87,8 @@ fiximages (Para [Image attr text (target_1, target_2)]) = do
   let myimage =[Image nullAttr [] (target_1, target_2)]
   let newlink = fancyLink $ Link nullAttr myimage (target_1, target_2)
   let title   = fancyLink $ Link nullAttr text (target_1, target_2)
-  Div nullAttr [Para [title], Para [newlink]]
---  Header 2 ([],[],[("data-background-image",target_1),("data-background-size","contain")]) [Span attr text]
+--  Div nullAttr [Para [title], Para [newlink]]
+  Header 2 ([],[],[("data-background-image",target_1),("data-background-size","contain")]) [Span attr text]
 
 -- Anything else is just itself.
 fiximages x = x

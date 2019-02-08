@@ -13,6 +13,9 @@ extractBolds x = foldl (++) [] (map extractHeaderOrBold x)
 
 extractHeaderOrBold :: Block -> [Block]
 extractHeaderOrBold (Header n m xs) = [Header n m xs]
+extractHeaderOrBold (Div (id, classes, meta) contents)
+  | "slide" `elem` classes = []
+  | otherwise = query extractBold contents
 extractHeaderOrBold x = query extractBold x
 
 extractBold :: Inline -> [Block]
