@@ -12,11 +12,13 @@ to the new one (around fenced divs).
 
 This code does not create the slide deck directly; rather, it writes to the pandoc
 AST in a format that should create slides in any of Pandoc's built-in slide
-formats. I generally use it with `reveal-js` slides.
+formats. I generally use it with `reveal-js` slides; certain options
+(such as the handling of fullscreen slides) will only work with
+reveal-js classes.
 
 This repo is periodically updated to work with the latest build of
-Pandoc, which has a frequently-changing API.  If you get errors,
-probably you have the wrong version of Pandoc installed.
+Pandoc, which has a frequently-changing API. The release numbers are
+tied to the version of pandoc I expect this to run with.
 
 ## Quickstart
 
@@ -29,6 +31,19 @@ is possible without a working Haskell installation locally.
 pandoc --filter src/lectureToSlidedeck.hs -t revealjs lecture.md --standalone -o slides.html -V revealjs-url=http://lab.hakim.se/reveal-js
 pandoc --filter src/lectureToOutline.hs lecture.md -o outline.pdf
 ```
+
+### Installation
+
+If running this frequently, it's faster to compile the filters to
+executables.
+
+As of version 2.7.1 of this  project, I do so use using 'stack.' With
+this directory located locally, just enter 'stack install' to install
+the binaries locally. (To make these universally accessible, I add the
+following line to `.stack/config.yaml`: `local-bin-path: /usr/local/bin/`.
+
+
+
 
 ## Writing format
 
