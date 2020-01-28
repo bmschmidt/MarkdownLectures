@@ -1,2 +1,3 @@
-lectureToOutline
-lectureToSlidedeck
+.stack-work/
+MarkdownLectures.cabal
+*~

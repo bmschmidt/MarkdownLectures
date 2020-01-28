@@ -15,7 +15,9 @@ extractHeaderOrBold :: Block -> [Block]
 extractHeaderOrBold (Header n m xs) = [Header n m xs]
 extractHeaderOrBold (Div (id, classes, meta) contents)
   | "slide" `elem` classes = []
+--  | "outline" `elem` classes = contents
   | otherwise = query extractBold contents
+  
 extractHeaderOrBold x = query extractBold x
 
 extractBold :: Inline -> [Block]
@@ -83,7 +85,7 @@ addToOutline (OrderedList attr xs) (Header n hattr headerlines)
    | n == 1 = OrderedList attr (xs ++ [[(Para headerlines)]])
   where
     lowerHeader = Header (n-1) hattr headerlines
-    
+   
 -- The basic appender takes either an OrderedList 
 -- or a header; different behaviors for each one.
 

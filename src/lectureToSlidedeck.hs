@@ -1,4 +1,4 @@
-import Text.Pandoc.Error
+--import Text.Pandoc.Error
 import Text.Pandoc
 import Text.Pandoc.Walk (walk,query)
 import Text.Pandoc.Shared (stringify)
@@ -29,12 +29,14 @@ extractSlides (Div (id, classes, meta) contents)
   | "slide" `elem` classes = contents ++ [HorizontalRule]
   | otherwise = []
   where content = Div (id, classes, meta) contents
---All other text is skipped
 
+
+-- standalone images (and iframes) are automatically turned into slides.
+        
 extractSlides (Para [Image attr text (target_1, target_2)]) = 
-  [fiximages (Para [Image attr text (target_1, target_2)])]
+  [fiximages (Para [Image attr text (target_1, target_2)]), HorizontalRule]
 
-
+--All other text is skipped
 extractSlides x = []
 
 
@@ -59,9 +61,20 @@ fancyLink x = x
 
 makeIframe :: String -> Inline
 
+
+-- data-src instead of 'src' for images causes lazy-loading.
+resrc :: (String, String) -> (String, String)
+resrc ("src", x) = ("data-src", x)
+resrc x = x
+
+makeLazyLoad :: Attr -> Attr
+makeLazyLoad (id, classes, kvpairs) =
+  (id, classes, (map resrc kvpairs))
+
+
 -- Iframes are arbitrarily defined at 600px tall, because they seem to break when scaling by percent.
 makeIframe target = do
-  let iframe = "<iframe allowfullscreen width=95% height=600px src=\"" ++ target ++ "\" data-autoplay></iframe>"
+  let iframe = "<iframe allowfullscreen width=95% height=600px data-src=\"" ++ target ++ "\" data-autoplay></iframe>"
   RawInline (Format "html") iframe
 
 fiximages :: Block -> Block
@@ -88,7 +101,7 @@ fiximages (Para [Image attr text (target_1, target_2)]) = do
   let newlink = fancyLink $ Link nullAttr myimage (target_1, target_2)
   let title   = fancyLink $ Link nullAttr text (target_1, target_2)
 --  Div nullAttr [Para [title], Para [newlink]]
-  Header 2 ([],[],[("data-background-image",target_1),("data-background-size","contain")]) [Span attr text]
+  Header 2 ([], [], [("data-background-image",target_1),("data-background-size","contain")]) [Span attr text]
 
 -- Anything else is just itself.
 fiximages x = x

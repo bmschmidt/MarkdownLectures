@@ -1,0 +1,88 @@
+name:                MarkdownLectures
+version:             3.0
+github:              "bmschmidt/MarkdownLectures"
+license:             MIT
+author:              "Ben Schmidt"
+maintainer:          "bmschmidt@gmail.com"
+copyright:           "2020 Ben Schmidt"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/MarkdownLectures#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- pandoc==2.7.3
+- pandoc-types==1.17.6.1
+- text >= 1.2.3
+- HTTP >= 4000.3.14
+
+library:
+  source-dirs: src
+
+executables:
+  lectureToPrintable:
+    main:                lectureToPrintable.hs
+    source-dirs:         src
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - MarkdownLectures  
+  lectureToOutline:
+    main:                lectureToOutline.hs
+    source-dirs:         src
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - MarkdownLectures
+  lectureToSlidedeck:
+    main:                lectureToSlidedeck.hs
+    source-dirs:         src
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - MarkdownLectures
+  convertOldFormat:
+    main:                convertOldFormat.hs
+    source-dirs:         src
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - MarkdownLectures
+  convertVeryOldFormat:
+    main:                convertVeryOldFormat.hs
+    source-dirs:         src
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - MarkdownLectures
+
+tests:
+  MarkdownLectures-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - MarkdownLectures
