@@ -14,8 +14,8 @@ extractBolds x = foldl (++) [] (map extractHeaderOrBold x)
 extractHeaderOrBold :: Block -> [Block]
 extractHeaderOrBold (Header n m xs) = [Header n m xs]
 extractHeaderOrBold (Div (id, classes, meta) contents)
+  | "outline" `elem` classes = [Div (id, classes, meta) contents]
   | "slide" `elem` classes = []
---  | "outline" `elem` classes = contents
   | otherwise = query extractBold contents
   
 extractHeaderOrBold x = query extractBold x
@@ -90,8 +90,13 @@ addToOutline (OrderedList attr xs) (Header n hattr headerlines)
 -- or a header; different behaviors for each one.
 
 appendOutline :: Block -> Block -> Block
+
 appendOutline (OrderedList attr xs) (Para xbs) = do
   OrderedList attr $ addParaToEnd xs (Para [(Strong xbs)])
+  
+appendOutline (OrderedList attr xs) (Div divattr blocks) = do
+  OrderedList attr $ addParaToEnd xs (Div divattr blocks)
+  
 appendOutline oldlist newheader = do
   addToOutline oldlist newheader
 
@@ -100,7 +105,7 @@ emptyOrderedList = OrderedList ( 1 , DefaultStyle , DefaultDelim ) []
 
 -- The overall action: first build out the list of bolds and headers,
 -- and then fold them all together into a new outline,
--- and finally return a new Pandoc dcoument consisting of just that outline.
+-- and finally return a new Pandoc document consisting of just that outline.
 
 outlineReturn :: Pandoc -> Pandoc
 outlineReturn (Pandoc meta blocks) = do
